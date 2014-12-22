@@ -13,7 +13,7 @@ except ImportError:
     from urllib2 import urlopen ## Py2
 
 #/
-__version__ = '0.2'
+__version__ = '0.2.1'
 
 #/ define |exec_| and |raise_| that are 2*3 compatible.
 ##
@@ -480,7 +480,7 @@ def load_obj_http(
 
         #/ should not happen, but just in case
         if not mod_name:
-            raise_(ValueError('Module name can not be inferred from the URI.\n URI is |%s|' % uri))
+            raise ValueError('Module name can not be inferred from the URI.\n URI is |%s|' % uri)
 
     #/
     #assert mod_name
