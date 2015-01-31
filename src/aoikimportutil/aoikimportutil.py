@@ -284,6 +284,67 @@ def import_module_by_http(uri, mod_name, sys_use=True, sys_add=True):
     return mod_obj
 
 #/
+def uri_split(uri, mod_attr_sep='::'):
+    #/
+    uri_part_s = uri.split(mod_attr_sep, 2)
+    ## use |split| instead of |partition| to be compatible with Python 2.4-
+
+    if len(uri_part_s) == 2:
+        mod_uri, attr_chain = uri_part_s
+    else:
+        mod_uri = uri_part_s[0]
+
+        attr_chain = None
+
+    #/
+    if uri.startswith('http://'):
+        #/
+        prot = 'http'
+
+        #/ mod_uri is file url
+        #mod_uri = mod_uri
+    #/
+    elif uri.startswith('https://'):
+        prot = 'https'
+
+        #/ mod_uri is file url
+        #mod_uri = mod_uri
+    #/
+    elif mod_uri.startswith('py://'):
+        #/
+        prot = 'py'
+
+        #/ mod_uri is module name
+        mod_uri = mod_uri[5:]
+    #/
+    elif mod_uri.startswith('file://'):
+        #/
+        prot = 'file'
+
+        #/ mod_uri is file path
+        mod_uri = mod_uri[7:]
+    #/
+    elif mod_uri.endswith('.py'):
+    ## This means if no protocol prefix is present, and the uri ends with |.py|,
+    ##  then consider the uri as module file path instead of module name.
+        #/
+        prot = 'file'
+
+        #/ mod_uri is file path
+        #mod_uri = mod_uri
+    else:
+        #/
+        prot = 'py'
+
+        #/ mod_uri is module name
+        #mod_uri = mod_uri
+
+    #/
+    res = (prot, mod_uri, attr_chain)
+
+    return res
+
+#/
 def getattr_chain(obj, attr_chain, sep='.'):
     """Get the last attribute of a specified chain of attributes from a specified object.
     E.g. |getattr_chain(x, 'a.b.c')| is equivalent to |x.a.b.c|.
@@ -319,6 +380,7 @@ def load_obj(
     mod_attr_sep='::',
     attr_chain_sep='.',
     retn_mod=False,
+    uri_parts=None,
     ):
     """Load an object from a module (specified by module name in Python namespace)
      or from a module file (specified by module file path).
@@ -351,35 +413,13 @@ def load_obj(
     @retn_mod: see func |load_obj|'s same name arg.
     """
     #/
-    uri_part_s = uri.split(mod_attr_sep, 2)
-    ## use |split| instead of |partition| to be compatible with Python 2.4-
+    if uri_parts is None:
+        uri_parts = uri_split(uri=uri, mod_attr_sep=mod_attr_sep)
 
-    if len(uri_part_s) == 2:
-        mod_uri, attr_chain = uri_part_s
-    else:
-        mod_uri = uri_part_s[0]
-
-        attr_chain = None
+    prot, mod_uri, attr_chain = uri_parts
 
     #/
-    if mod_uri.startswith('py://'):
-        is_mod_name = True
-
-        mod_uri = mod_uri[5:]
-    elif mod_uri.startswith('file://'):
-        is_mod_name = False
-
-        mod_uri = mod_uri[7:]
-    elif mod_uri.endswith('.py'):
-    ## This means if no protocol prefix is present, and the uri ends with |.py|,
-    ##  then consider the uri as module file path instead of module name.
-        is_mod_name = False
-    else:
-    ## This means consider the uri as module name by default
-        is_mod_name = True
-
-    #/
-    if is_mod_name:
+    if prot == 'py':
     ## This means the uri specifies a module name, e.g. |a.b.c|
         #/
         mod_name_to_load = mod_uri
@@ -443,6 +483,7 @@ def load_obj_http(
     mod_attr_sep='::',
     attr_chain_sep='.',
     retn_mod=False,
+    uri_parts=None,
     ):
     """Load an object from a remote module file downloaded via HTTP.
 
@@ -465,10 +506,11 @@ def load_obj_http(
 
     @retn_mod: see func |load_obj|'s same name arg.
     """
-
     #/
-    file_url, _, attr_chain = uri.partition(mod_attr_sep)
-    ## |attr_chain| can be empty
+    if uri_parts is None:
+        uri_parts = uri_split(uri=uri, mod_attr_sep=mod_attr_sep)
+
+    _, file_url, attr_chain = uri_parts
 
     #/
     if not mod_name:
@@ -549,19 +591,12 @@ def load_obj_local_or_remote(
     @retn_mod: see func |load_obj| or |load_obj_http|'s same name arg.
     """
     #/
-    if uri.startswith('http://') \
-    or uri.startswith('https://'):
-        #/
-        return load_obj_http(
-            uri,
-            mod_name=mod_name,
-            sys_use=sys_use,
-            sys_add=sys_add,
-            mod_attr_sep=mod_attr_sep,
-            attr_chain_sep=attr_chain_sep,
-            retn_mod=retn_mod,
-        )
-    else:
+    uri_parts = uri_split(uri=uri, mod_attr_sep=mod_attr_sep)
+
+    prot = uri_parts[0]
+
+    #/
+    if prot in ('py', 'file'):
         #/
         return load_obj(
             uri,
@@ -571,4 +606,22 @@ def load_obj_local_or_remote(
             mod_attr_sep=mod_attr_sep,
             attr_chain_sep=attr_chain_sep,
             retn_mod=retn_mod,
+            uri_parts=uri_parts,
         )
+    #/
+    elif prot in ('http', 'https'):
+        #/
+        return load_obj_http(
+            uri,
+            mod_name=mod_name,
+            sys_use=sys_use,
+            sys_add=sys_add,
+            mod_attr_sep=mod_attr_sep,
+            attr_chain_sep=attr_chain_sep,
+            retn_mod=retn_mod,
+            uri_parts=uri_parts,
+        )
+    #/
+    else:
+        #/
+        assert 0, uri
