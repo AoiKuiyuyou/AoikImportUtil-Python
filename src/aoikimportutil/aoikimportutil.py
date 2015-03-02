@@ -3,9 +3,11 @@
 File ID: 3ngd7IH
 """
 from __future__ import absolute_import
+
 import imp
 import os.path
 import sys
+
 
 try:
     from urllib.request import urlopen ## Py3
@@ -141,7 +143,11 @@ def import_module_by_code(mod_code, mod_name, sys_add=True, sys_use=True):
     return mod_obj
 
 #/
-def import_module_by_name(mod_name, ns_dir=None):
+def import_module_by_name(mod_name,
+    ns_dir=None,
+    sys_use=True,
+    sys_add=True,
+    ):
     """Import a module by module name.
 
     @param mod_name: module name in Python namespace.
@@ -155,17 +161,95 @@ def import_module_by_name(mod_name, ns_dir=None):
     if ns_dir is None:
         #/
         try:
-            return sys.modules[mod_name]
+            mod_obj_old = sys.modules[mod_name]
         except KeyError:
-            pass
+            mod_obj_old = None
 
         #/
-        __import__(mod_name)
-        ## raise ImportError if the module not exists.
-        ## raise any error from the imported module.
+        if sys_use:
+            #/
+            if mod_obj_old is not None:
+                return mod_obj_old
+        #/
+        #/ 3pRKQd1
+        #/ if not want to use existing module in "sys.modules", need re-import
+        ##  by calling "__import__" at 2eys2rL. But "__import__" will return
+        ##  existing module in "sys.modules", so we must delete existing module
+        ##  before calling "__import__".
+        else:
+            #/
+            try:
+                del sys.modules[mod_name]
+            except KeyError:
+                pass
 
         #/
-        return sys.modules[mod_name]
+        try:
+            #/ 2eys2rL
+            __import__(mod_name)
+            ## raise ImportError if the module not exists.
+            ## raise any error from the imported module.
+        except Exception:
+            #/
+            if mod_obj_old is not None:
+                #/ restore to "sys.modules" the old module deleted at 3pRKQd1
+                sys.modules[mod_name] = mod_obj_old
+
+            #/
+            raise
+
+        #/
+        mod_obj = sys.modules[mod_name]
+
+        #/
+        if not sys_add:
+            #/
+            par_mod = None
+
+            rdot_idx = mod_name.rfind('.')
+
+            if rdot_idx != -1:
+                #/
+                par_mod_name = mod_name[0:rdot_idx]
+
+                mod_sname = mod_name[rdot_idx+1:]
+
+                #/ can None
+                par_mod = sys.modules.get(par_mod_name, None)
+
+            #/
+            if mod_obj_old is not None:
+                #/ restore to "sys.modules" the old module deleted at 3pRKQd1
+                sys.modules[mod_name] = mod_obj_old
+
+                #/ restore to parent module's attribute the old module deleted
+                ##  at 3pRKQd1
+                if par_mod is not None \
+                and getattr(par_mod, mod_sname, None) is mod_obj:
+                    try:
+                        setattr(par_mod, mod_sname, mod_obj_old)
+                    except AttributeError:
+                        pass
+            #/
+            else:
+                #/ delete from "sys.modules" the module newly loaded at 2eys2rL.
+                try:
+                    del sys.modules[mod_name]
+                except KeyError:
+                    pass
+
+                #/
+                if par_mod is not None \
+                and getattr(par_mod, mod_sname, None) is mod_obj:
+                    #/ delete from parent module's attribute the module
+                    ##  newly loaded at 2eys2rL.
+                    try:
+                        delattr(par_mod, mod_sname)
+                    except AttributeError:
+                        pass
+
+        #/
+        return mod_obj
 
     #/
     #assert ns_dir is not None
@@ -429,7 +513,10 @@ def load_obj(
         ## the name of the module to import is specified in arg |uri|.
 
         #/
-        mod_obj = import_module_by_name(mod_name_to_load)
+        mod_obj = import_module_by_name(mod_name_to_load,
+            sys_use=sys_use,
+            sys_add=sys_add,
+        )
         ## raise error
 
     else:
