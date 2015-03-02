@@ -333,6 +333,9 @@ def import_module_by_path(mod_path, mod_name, sys_add=True, sys_use=True):
     ## raise error
 
     #/
+    mod_obj.__file__ = mod_path
+
+    #/
     return mod_obj
 
 #/
