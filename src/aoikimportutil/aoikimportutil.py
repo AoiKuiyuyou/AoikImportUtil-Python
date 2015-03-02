@@ -15,7 +15,7 @@ except ImportError:
     from urllib2 import urlopen ## Py2
 
 #/
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 #/ define |exec_| and |raise_| that are 2*3 compatible.
 ##

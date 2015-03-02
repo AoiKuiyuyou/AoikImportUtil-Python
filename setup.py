@@ -5,7 +5,7 @@ from setuptools import setup
 setup(
     name='AoikImportUtil',
 
-    version='0.2.2',
+    version='0.2.3',
 
     description="""Import module by code, name, file path, or HTTP URL. Import any object, not only module.""",
 
