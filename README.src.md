@@ -1,3 +1,9 @@
+[:var_set('', """
+# Compile command
+aoikdyndocdsl -s README.src.md -n aoikdyndocdsl.ext.all::nto -g README.md
+""")
+]\
+[:HDLR('heading', 'heading')]\
 # AoikImportUtil-Python
 Import module by code, name, path, and import object.
 
@@ -5,18 +11,10 @@ Tested working with:
 - Python: 2.5+, 3.0+
 
 ## Table of Contents
-- [Setup](#setup)
-  - [Setup via pip](#setup-via-pip)
-  - [Setup via git](#setup-via-git)
-- [Usage](#usage)
-  - [Import module by code](#import-module-by-code)
-  - [Import module by name](#import-module-by-name)
-  - [Import module by path](#import-module-by-path)
-  - [Import object](#import-object)
+[:toc(beg='next', indent=-1)]
 
 ## Setup
-- [Setup via pip](#setup-via-pip)
-- [Setup via git](#setup-via-git)
+[:tod()]
 
 ### Setup via pip
 Run:
@@ -39,10 +37,7 @@ python setup.py install
 ```
 
 ## Usage
-- [Import module by code](#import-module-by-code)
-- [Import module by name](#import-module-by-name)
-- [Import module by path](#import-module-by-path)
-- [Import object](#import-object)
+[:tod()]
 
 ### Import module by code
 E.g.
