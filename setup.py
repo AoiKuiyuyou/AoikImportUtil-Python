@@ -8,7 +8,7 @@ from setuptools import setup
 setup(
     name='AoikImportUtil',
 
-    version='0.2.3',
+    version='0.3.0',
 
     description="""Import module by code, name, path, and import object.""",
 
