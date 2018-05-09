@@ -1,0 +1,30 @@
+{
+    "folders": [
+        {
+            "path": "../../",
+            "folder_exclude_patterns": [
+                "__*__",
+                "build*",
+                ".cache",
+                "dist*",
+                "*.egg-info",
+                "tools/waf/waf?-*",
+                "*_venv.py*"
+            ],
+            "file_exclude_patterns": [
+                ".lock-waf*",
+                "*.log"
+            ]
+        }
+    ],
+    "settings": {
+        "tab_size": 4,
+        "translate_tabs_to_spaces": true,
+        "detect_indentation": true,
+        "auto_indent": true,
+        "smart_indent": true,
+        "trim_automatic_white_space": true,
+        "trim_trailing_white_space_on_save": true,
+        "use_tab_stops": true
+    }
+}
